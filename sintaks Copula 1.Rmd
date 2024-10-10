@@ -1,0 +1,544 @@
+---
+title: "Analisis Copula Zero Inflated Regression"
+output: word_document
+editor_options: 
+  markdown: 
+    wrap: 72
+  chunk_output_type: console
+---
+
+# Memanggil data
+
+```{r}
+library(readxl)
+
+# Memanggil Data
+data <- read_xlsx("D:/1. LECTURE/SEMESTER 7/KAPSEL 2/BABAK BARU/Data baru.xlsx")
+attach(data)
+summary(data)
+```
+
+# Eksplorasi Data
+
+```{r}
+library(ggplot2)
+
+vis_y1<-ggplot(data, aes(x=Y1)) + 
+  geom_histogram(aes(fill=..count..), binwidth = 1)+
+  scale_fill_gradient("Count", low = "#dff9fb", high = "#95afc0")+ggtitle("Frekuensi Banyaknya Data 0 pada Y1 ")
+
+vis_y2<-ggplot(data, aes(x=Y2)) + 
+  geom_histogram(aes(fill=..count..), binwidth = 1)+
+  scale_fill_gradient("Count", low = "white", high = "#f1c40f")+
+  ggtitle("Frekuensi Banyaknya Data 0 pada Y2")
+
+vis_y3<-ggplot(data, aes(x=Y3)) + 
+  geom_histogram(aes(fill=..count..), binwidth = 1)+
+  scale_fill_gradient("Count", low = "white", high = "#10ac84")+
+  ggtitle("Frekuensi Banyaknya Data 0 pada Y1 (Bali)")
+
+vis_y4<-ggplot(data, aes(x=Y4)) + 
+  geom_histogram(aes(fill=..count..), binwidth = 1)+
+  scale_fill_gradient("Count", low = "white", high = "#eb3b5a")+
+  ggtitle("Frekuensi Banyaknya Data 0 pada Y2 (Sulawesi)")
+
+vis_y5<-ggplot(data, aes(x=Y5)) + 
+  geom_histogram(aes(fill=..count..), binwidth = 1)+
+  scale_fill_gradient("Count", low = "white", high = "#c44569")+
+  ggtitle("Frekuensi Banyaknya Data 0 pada Y3 (Papua)")
+
+
+vis_y1;vis_y2;vis_y3;vis_y4;vis_y5
+```
+
+# Persiapan
+
+```{r}
+model_Y1 <- glm(Y1~1, family=poisson(link="log"), data = data) 
+
+model_Y2 <- glm(Y2~1, family=poisson(link="log"), data = data) 
+
+model_Y3 <- glm(Y3~1, family=poisson(link="log"), data = data) 
+
+model_Y4 <- glm(Y4~1, family=poisson(link="log"), data = data) 
+
+model_Y5 <- glm(Y5~1, family=poisson(link="log"), data = data) 
+
+```
+
+# Uji Overdispersi
+
+```{r}
+library(AER) 
+dispersiontest(model_Y1, alternative="greater") 
+dispersiontest(model_Y2, alternative="greater") 
+dispersiontest(model_Y3, alternative="greater") 
+dispersiontest(model_Y4, alternative="greater") 
+dispersiontest(model_Y5, alternative="greater") 
+
+```
+
+# Uji Excess Zero
+
+```{r}
+library(vcdExtra) 
+zero.test(Y1)
+zero.test(Y2)
+zero.test(Y3)
+zero.test(Y4)
+zero.test(Y5)
+
+```
+
+# Scatter Plot
+
+```{r}
+library(car) 
+
+scatterplot(Y1,Y2)
+scatterplot(Y2,Y3)
+scatterplot(Y3,Y4)
+scatterplot(Y4,Y5)
+
+```
+
+# Asosiasi Peubah Dependen
+
+```{r}
+#Spearmen
+cor.test(Y1,Y2, method = "spearman")
+cor.test(Y2,Y3, method = "spearman")
+cor.test(Y3,Y4, method = "spearman")
+cor.test(Y4,Y5, method = "spearman")
+
+#Kendall tau
+cor.test(Y1,Y2, method = "kendall")
+cor.test(Y2,Y3, method = "kendall")
+cor.test(Y3,Y4, method = "kendall")
+cor.test(Y4,Y5, method = "kendall")
+
+#Pearson
+cor.test(Y1,Y2, method = "pearson")
+cor.test(Y2,Y3, method = "pearson")
+cor.test(Y3,Y4, method = "pearson")
+cor.test(Y3,Y5, method = "pearson")
+
+```
+
+# Pemodelan Univariate
+
+## a. Bali - Sulawesi (Y3 - Y4)
+
+```{r}
+#Bali - Sulawesi
+#Model
+model1.1 <- glm(Y3 ~ X13+X14, family=poisson(link="log"), data = data) 
+model1.2 <- glm(Y4 ~ X13+X14, family=poisson(link="log"), data = data) 
+model1.3 <- glm(Y3 ~ X23+X24, family=poisson(link="log"), data = data) 
+model1.4 <- glm(Y4 ~ X23+X24, family=poisson(link="log"), data = data) 
+
+model1.5 <- glm(Y3 ~ X13+X23, family=poisson(link="log"), data = data) 
+model1.6 <- glm(Y4 ~ X13+X23, family=poisson(link="log"), data = data) 
+model1.7 <- glm(Y3 ~ X14+X24, family=poisson(link="log"), data = data) 
+model1.8 <- glm(Y4 ~ X14+X24, family=poisson(link="log"), data = data) 
+
+model1.9 <- glm(Y3 ~ X13+X14+X23+X24, family=poisson(link="log"), data = data) 
+model1.10 <- glm(Y4 ~ X13+X14+X23+X24, family=poisson(link="log"), data = data) 
+
+```
+
+```{r}
+summary(model1.1);summary(model1.2)
+summary(model1.3);summary(model1.4)
+summary(model1.5);summary(model1.6)
+summary(model1.7);summary(model1.8)
+summary(model1.9);summary(model1.10)
+
+BIC(model1.1);BIC(model1.2);BIC(model1.3)
+BIC(model1.4);BIC(model1.5);BIC(model1.6)
+BIC(model1.7);BIC(model1.8);BIC(model1.9);BIC(model1.10)
+
+logLik(model1.1);logLik(model1.2);logLik(model1.3);logLik(model1.4)
+logLik(model1.5);logLik(model1.6);logLik(model1.7);logLik(model1.8)
+logLik(model1.9);logLik(model1.10)
+```
+
+## b. Sulawesi - Papua (Y4 - Y5)
+
+```{r}
+model2.1 <- glm(Y4 ~ X14+X15, family=poisson(link="log"), data = data) 
+model2.2 <- glm(Y5 ~ X14+X15, family=poisson(link="log"), data = data) 
+model2.3 <- glm(Y4 ~ X24+X25, family=poisson(link="log"), data = data) 
+model2.4 <- glm(Y5 ~ X24+X25, family=poisson(link="log"), data = data) 
+
+model2.5 <- glm(Y4 ~ X14+X24, family=poisson(link="log"), data = data) 
+model2.6 <- glm(Y5 ~ X14+X24, family=poisson(link="log"), data = data) 
+model2.7 <- glm(Y4 ~ X15+X25, family=poisson(link="log"), data = data) 
+model2.8 <- glm(Y5 ~ X15+X25, family=poisson(link="log"), data = data) 
+
+model2.9 <- glm(Y4 ~ X14+X15+X24+X25, family=poisson(link="log"), data = data) 
+model2.10 <- glm(Y5 ~ X14+X15+X24+X25, family=poisson(link="log"), data = data) 
+```
+
+```{r}
+summary(model2.1);summary(model2.2)
+summary(model2.3);summary(model2.4)
+summary(model2.5);summary(model2.6)
+summary(model2.7);summary(model2.8)
+summary(model2.9);summary(model2.10)
+
+BIC(model2.1);BIC(model2.2);BIC(model2.3)
+BIC(model2.4);BIC(model2.5);BIC(model2.6)
+BIC(model2.7);BIC(model2.8);BIC(model2.9);BIC(model2.10)
+
+logLik(model2.1);logLik(model2.2);logLik(model2.3);logLik(model2.4)
+logLik(model2.5);logLik(model2.6);logLik(model2.7);logLik(model2.8)
+logLik(model2.9);logLik(model2.10)
+
+```
+
+# Mencari sebaran univariate Y
+
+## Diskrit
+
+```{r}
+library(fitdistrplus)
+Y1_coba1 <- fitdist(Y1, discrete = T, "pois")
+Y1_coba3 <- fitdist(Y1, discrete = T, "nbinom")
+Y1_coba4 <- fitdist(Y1, discrete = T, "geom")
+
+Y2_coba1 <- fitdist(Y2, discrete = T, "pois")
+Y2_coba3 <- fitdist(Y2, discrete = T, "nbinom")
+Y2_coba4 <- fitdist(Y2, discrete = T, "geom")
+
+Y3_coba1 <- fitdist(Y3, discrete = T, "pois")
+Y3_coba3 <- fitdist(Y3, discrete = T, "nbinom")
+Y3_coba4 <- fitdist(Y3, discrete = T, "geom")
+
+Y4_coba1 <- fitdist(Y4, discrete = T, "pois")
+Y4_coba3 <- fitdist(Y4, discrete = T, "nbinom")
+Y4_coba4 <- fitdist(Y4, discrete = T, "geom")
+
+Y5_coba1 <- fitdist(Y5, discrete = T, "pois")
+Y5_coba3 <- fitdist(Y5, discrete = T, "nbinom")
+Y5_coba4 <- fitdist(Y5, discrete = T, "geom")
+
+
+```
+
+```{r}
+Y1_coba1$aic;Y1_coba1$bic;Y1_coba1$loglik; summary(Y1_coba1) #Poisson
+Y1_coba3$aic;Y1_coba3$bic;Y1_coba3$loglik #nbinom
+Y1_coba4$aic;Y1_coba4$bic;Y1_coba4$loglik #geom
+
+Y2_coba1$aic;Y2_coba1$bic;Y2_coba1$loglik #Poisson
+Y2_coba3$aic;Y2_coba3$bic;Y2_coba3$loglik #nbinom
+Y2_coba4$aic;Y2_coba4$bic;Y2_coba4$loglik #geom
+
+Y3_coba1$aic;Y3_coba1$bic;Y3_coba1$loglik; summary(Y3_coba1) #Poisson
+Y3_coba3$aic;Y3_coba3$bic;Y3_coba3$loglik; summary(Y3_coba3) #nbinom
+Y3_coba4$aic;Y3_coba4$bic;Y3_coba4$loglik; summary(Y3_coba4) #geom
+
+Y4_coba1$aic;Y4_coba1$bic;Y4_coba1$loglik; summary(Y4_coba1) #Poisson
+Y4_coba3$aic;Y4_coba3$bic;Y4_coba3$loglik; summary(Y4_coba3) #nbinom
+Y4_coba4$aic;Y4_coba4$bic;Y4_coba4$loglik; summary(Y4_coba4) #geom
+
+Y5_coba1$aic;Y5_coba1$bic;Y5_coba1$loglik; summary(Y5_coba1) #Poisson
+Y5_coba3$aic;Y5_coba3$bic;Y5_coba3$loglik; summary(Y5_coba3) #nbinom
+Y5_coba4$aic;Y5_coba4$bic;Y5_coba4$loglik; summary(Y5_coba4) #geom
+
+```
+
+## Kontinu
+
+```{r}
+Y1_kon1 <- fitdist(Y1,  "norm")
+Y1_kon4 <- fitdist(Y1,  "exp")
+Y1_kon6 <- fitdist(Y1,  "logis")
+
+Y2_kon1 <- fitdist(Y2,  "norm")
+Y2_kon4 <- fitdist(Y2,  "exp")
+Y2_kon6 <- fitdist(Y2,  "logis")
+
+Y3_kon1 <- fitdist(Y3,  "norm")
+Y3_kon4 <- fitdist(Y3,  "exp")
+Y3_kon6 <- fitdist(Y3,  "logis")
+
+Y4_kon1 <- fitdist(Y4,  "norm")
+Y4_kon4 <- fitdist(Y4,  "exp")
+Y4_kon6 <- fitdist(Y4,  "logis")
+
+Y5_kon1 <- fitdist(Y5,  "norm")
+Y5_kon4 <- fitdist(Y5,  "exp")
+Y5_kon6 <- fitdist(Y5,  "logis")
+
+```
+
+```{r}
+Y1_kon1$aic;Y1_kon1$bic;Y1_kon1$loglik #Normal
+Y1_kon4$aic;Y1_kon4$bic;Y1_kon4$loglik #Eksponensial
+Y1_kon6$aic;Y1_kon6$bic;Y1_kon6$loglik #Logistik
+
+Y2_kon1$aic;Y2_kon1$bic;Y2_kon1$loglik #Normal
+Y2_kon4$aic;Y2_kon4$bic;Y2_kon4$loglik #Eksponensial
+Y2_kon6$aic;Y2_kon6$bic;Y2_kon6$loglik #Logistik
+
+Y3_kon1$aic;Y3_kon1$bic;Y3_kon1$loglik #Normal
+Y3_kon4$aic;Y3_kon4$bic;Y3_kon4$loglik #Eksponensial
+Y3_kon6$aic;Y3_kon6$bic;Y3_kon6$loglik #Logistik
+
+Y4_kon1$aic;Y4_kon1$bic;Y4_kon1$loglik #Normal
+Y4_kon4$aic;Y4_kon4$bic;Y4_kon4$loglik #Eksponensial
+Y4_kon6$aic;Y4_kon6$bic;Y4_kon6$loglik #Logsitik
+
+Y5_kon1$aic;Y5_kon1$bic;Y5_kon1$loglik #Normal
+Y5_kon4$aic;Y5_kon4$bic;Y5_kon4$loglik #Eksponensial
+Y5_kon6$aic;Y5_kon6$bic;Y5_kon6$loglik #Logistik
+
+```
+
+# Pemilihan Model Copula
+
+```{r}
+library(VineCopula) 
+
+var_a <- pobs(Y3) 
+var_b <- pobs(Y4)
+var_c <- pobs(Y5)
+
+selectedCopula1 <- BiCopSelect(var_a, var_b, familyset = 1) #Gaussian
+selectedCopula2 <- BiCopSelect(var_a, var_b, familyset = 2) #student-t
+selectedCopula3 <- BiCopSelect(var_a, var_b, familyset = 3) #Clayton
+selectedCopula4 <- BiCopSelect(var_a, var_b, familyset = 4) #Gumbel
+selectedCopula5 <- BiCopSelect(var_a, var_b, familyset = 5) #Frank
+selectedCopula6 <- BiCopSelect(var_a, var_b, familyset = 6) #Survival Joe
+
+plot(selectedCopula1, main= "Gaussian Copula")
+plot(selectedCopula2, main= "Student-t Copula")
+plot(selectedCopula3, main= "Clayton Copula")
+plot(selectedCopula4, main= "Gumbel Copula")
+plot(selectedCopula5, main= "Frank Copula")
+plot(selectedCopula6, main= "Joe Copula")
+
+summary(selectedCopula1)
+summary(selectedCopula2)
+summary(selectedCopula3)
+summary(selectedCopula4)
+summary(selectedCopula5)
+summary(selectedCopula6)
+
+selected2Copula1 <- BiCopSelect(var_b, var_c, familyset = 1) #Gaussian
+selected2Copula2 <- BiCopSelect(var_b, var_c, familyset = 2) #student-t
+selected2Copula3 <- BiCopSelect(var_b, var_c, familyset = 3) #Clayton
+selected2Copula4 <- BiCopSelect(var_b, var_c, familyset = 4) #Gumbel
+selected2Copula5 <- BiCopSelect(var_b, var_c, familyset = 5) #Frank
+selected2Copula6 <- BiCopSelect(var_b, var_c, familyset = 6) #Survival Joe
+
+plot(selected2Copula1, main= "Gaussian Copula", col = "red")
+plot(selected2Copula2, main= "Student-t Copula", col = "red")
+plot(selected2Copula3, main= "Clayton Copula", col = "red")
+plot(selected2Copula4, main= "Gumbel Copula", col = "red")
+plot(selected2Copula5, main= "Frank Copula", col = "red")
+plot(selected2Copula6, main= "Joe Copula", col = "red")
+
+
+```
+
+```{r}
+#=====================================================================
+selected2Copula1 <- BiCopSelect(var_b, var_c, familyset = 1) #Gaussian 
+selected2Copula2 <- BiCopSelect(var_b, var_c, familyset = 2) #Studnet-t
+selected2Copula3 <- BiCopSelect(var_b, var_c, familyset = 3) #Clayton
+selected2Copula4 <- BiCopSelect(var_b, var_c, familyset = 4) #Gumbel
+selected2Copula5 <- BiCopSelect(var_b, var_c, familyset = 5) #Frank
+selected2Copula6 <- BiCopSelect(var_b, var_c, familyset = 6) #Survival Joe
+
+
+plot(selected2Copula1)
+plot(selected2Copula2)
+plot(selected2Copula3)
+plot(selected2Copula4)
+plot(selected2Copula5)
+plot(selected2Copula6)
+
+
+summary(selected2Copula1)
+summary(selected2Copula2)
+summary(selected2Copula3)
+summary(selected2Copula4)
+summary(selected2Copula5)
+summary(selected2Copula6)
+
+```
+
+# Bivariat Copula
+
+## a. Bali Sulawesi (Y3 - Y4)
+
+```{r}
+m1 <- Y3 ~ X13+X14
+m2 <- Y4 ~ X13+X14
+
+m3 <- Y3 ~ X23+X24
+m4 <- Y4 ~ X23+X24
+
+m5 <- Y3 ~ X13+X23
+m6 <- Y4 ~ X13+X23
+
+m7 <- Y3 ~ X14+X24
+m8 <- Y4 ~ X14+X24
+
+m9 <- Y3 ~ X13+X14+X23+X24
+m10 <- Y4 ~ X13+X14+X23+X24
+```
+
+```{r}
+library(bizicount) 
+
+cp1 <- bizicount(m1,m2,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+cp2 <- bizicount(m3,m4,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+cp3 <- bizicount(m5,m6,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+cp4 <- bizicount(m7,m8,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+cp5 <- bizicount(m9,m10,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+
+```
+
+```{r}
+summary(cp1);cp1$aic;cp1$bic;cp1$loglik
+summary(cp2);cp2$aic;cp2$bic;cp2$loglik
+summary(cp3);cp3$aic;cp3$bic;cp3$loglik
+summary(cp4);cp4$aic;cp4$bic;cp4$loglik
+summary(cp5);cp5$aic;cp5$bic;cp5$loglik
+```
+
+## b. Sulawesi - Papua (Y4 - Y5)
+
+```{r}
+n1 <- Y4 ~ X14+X15
+n2 <- Y5 ~ X14+X15 
+
+n3 <- Y4 ~ X24+X25 
+n4 <- Y5 ~ X24+X25 
+
+n5 <- Y4 ~ X14+X24 
+n6 <- Y5 ~ X14+X24
+
+n7 <- Y4 ~ X15+X25 
+n8 <- Y5 ~ X15+X25 
+
+n9 <- Y4 ~ X14+X15+X24+X25 
+n10 <- Y5 ~ X14+X15+X24+X25 
+```
+
+```{r}
+cop1 <- bizicount(n1,n2,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+cop2 <- bizicount(n3,n4,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+cop3 <- bizicount(n5,n6,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+cop4 <- bizicount(n7,n8,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+cop5 <- bizicount(n9,n10,data,
+                 cop = "frank",
+                 margins = c("pois","pois"),
+                 keep = T) 
+
+```
+
+```{r}
+summary(cop1);cop1$aic;cop1$bic;cop1$loglik
+summary(cop2);cop2$aic;cop2$bic;cop2$loglik
+summary(cop3);cop3$aic;cop3$bic;cop3$loglik
+summary(cop4);cop4$aic;cop4$bic;cop4$loglik
+summary(cop5);cop5$aic;cop5$bic;cop5$loglik
+
+```
+
+# Bivariat Zero Inflated
+
+## a. Bali - Sulawesi (Y3 - Y4)
+
+```{r}
+z1 <- Y3 ~ X13+X14|X13+X14
+z2 <- Y4 ~ X13+X14|X13+X14
+
+z3 <- Y3 ~ X23+X24|X23+X24
+z4 <- Y4 ~ X23+X24|X23+X24
+
+z5 <- Y3 ~ X13+X23|X13+X23
+z6 <- Y4 ~ X13+X23|X13+X23
+
+z7 <- Y3 ~ X14+X24|X14+X24
+z8 <- Y4 ~ X14+X24|X14+X24
+
+z9 <- Y3 ~ X13+X14+X23+X24|X13+X14+X23+X24
+z10 <- Y4 ~ X13+X14+X23+X24|X13+X14+X23+X24
+```
+
+```{r}
+#Pemodelan ZIP
+cp.zi.1 <- bizicount(z1,z2,data,
+                     cop = "frank",
+                     margins = c("zip","zip"),
+                     link.zi = c("logit", "logit"),
+                     keep = T) 
+
+cp.zi.2 <- bizicount(z3,z4,data,
+                     cop = "frank",
+                     margins = c("zip","zip"),
+                     link.zi = c("probit", "probit"),
+                     keep = T) 
+
+cp.zi.3 <- bizicount(z5,z6,data,
+                     cop = "frank",
+                     margins = c("zip","zip"),
+                     link.zi = c("probit", "probit"),
+                     keep = T) 
+
+cp.zi.4 <- bizicount(z7,z8,data,
+                     cop = "frank",
+                     margins = c("zip","zip"),
+                     link.zi = c("probit", "probit"),
+                     keep = T) 
+
+cp.zi.5 <- bizicount(z9,z10,data,
+                     cop = "frank",
+                     margins = c("zip","zip"),
+                     link.zi = c("probit", "probit"),
+                     keep = T) 
+
+```
+
+```{r}
+summary(cp.zi.1);cp.zi.1$aic;cp.zi.1$bic;cp.zi.1$loglik
+summary(cp.zi.2);cp.zi.2$aic;cp.zi.2$bic;cp.zi.2$loglik
+summary(cp.zi.3);cp.zi.3$aic;cp.zi.3$bic;cp.zi.3$loglik
+summary(cp.zi.4);cp.zi.4$aic;cp.zi.4$bic;cp.zi.4$loglik
+summary(cp.zi.5);cp.zi.5$aic;cp.zi.5$bic;cp.zi.5$loglik
+
+```
+
